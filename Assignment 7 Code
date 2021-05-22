@@ -1,0 +1,321 @@
+#include<iostream>
+#include<list>
+#include<string>
+using namespace std;
+
+
+//data structure to handle  HashNodes
+class HashNode
+{
+      private:
+            int key;
+            string value;
+
+      public:
+            HashNode(){}
+            //constuctor to initialize the values when object is created
+            HashNode(int key, string value)
+            {
+                  this->key = key;
+                  this->value = value;
+            }
+            //function to print HashNode.key and HashNode.value
+            void print()
+            {
+                  cout << "        "<<key<<"                   |              "<<value << endl;
+            }
+            //function to return the VALUE
+            string getValue()
+            {
+                  return value;
+            }
+            //function to return the KEY
+            int getKey()
+            {
+                  return key;
+            }
+            void setValue(string value)
+            {
+                  this->value = value;
+            }
+};
+
+/* data structure to handle simple hashtable that resolves collision by
+ simply overwriting the old values with the new values*/
+class HashTable
+{
+private:
+      static const int hashSize = 10;
+      HashNode *table[hashSize] = {NULL};       //array of HashNode
+
+public:
+
+      //hashing the value
+      int hashFunction(int key)
+      {
+            return key % hashSize;
+      }
+
+      //insert function
+      void  insert(int key, string value)
+      {
+            int hashIndex = hashFunction(key);
+            table[hashIndex] = new HashNode(key, value);
+      }
+
+      //delete function that removes the value based on it's hash
+      string deleteKey(int key)
+      {
+            string temp = "NULL";
+            int hashIndex = hashFunction(key);
+            if(  !(table[hashIndex]==NULL))
+            {
+                  if(table[hashIndex]->getKey()==key)
+                  {
+                        temp = table[hashIndex]->getValue();
+                        table[hashIndex] = NULL;
+                  }
+            }
+            return temp;
+      }
+
+      //print all the hashNodes
+      void printHashTable()
+      {
+            cout <<endl<< "==========Hash Table=========" << endl;
+            cout << "|        Key                   |              Value     |" << endl;
+            cout << "----------------------------------------------------" << endl;
+            for (int i=0; i < hashSize;i++)
+            {
+                  if(table[i]==NULL)
+                        continue;
+                  table[i]->print();
+            }
+            cout <<"============================" << endl<<endl;
+      }
+
+      // a contains function that returns whether the value is already in the hashTable
+      bool containsValue(string value)
+      {
+            for (int i=0; i < hashSize;i++)
+            {
+                  if(table[i]==NULL)
+                        continue;
+                  
+                  if(table[i]->getValue()==value)
+                  {
+                        return true;
+                  }
+            }
+            return false;
+      }
+
+            // a contains function that returns whether the key is already in the hashTable
+      bool containsKey(int key)
+      {
+            for (int i=0; i < hashSize;i++)
+            {
+                  if(table[i]==NULL)
+                        continue;
+                  
+                  if(table[i]->getKey()==key)
+                  {
+                        return true;
+                  }
+            }
+            return false;
+      }
+};
+
+
+/*smarter hashtable with chaining including all the functions of simple hashtable*/
+class SmartHashTable
+{
+
+private:
+      static const int hashSize = 10;
+      list<HashNode> table[hashSize]; // array of linked list of HashNode
+
+public:
+
+      //hashing the value
+      int hashFunction(int key)
+      {
+             return key % hashSize;
+      }
+
+       //insert function
+      void  insert(int key, string value)
+      {
+            bool allowInsertion = false;
+            int hashIndex = hashFunction(key);
+            
+            //if list is empty just enter the data
+            if(table[hashIndex].empty())
+            {
+                  allowInsertion = true;
+            }
+            else
+            {
+                  auto pointer = table[hashIndex].begin();
+                  allowInsertion = true;
+                  do
+                  {
+                        //if dublicate is found then replace the value of previous key
+                        if(pointer->getKey()==key)
+                        {
+                              cout << "Duplicate key("<<key<<") found! \""<<pointer->getValue()<<"\" is replaced with \""<<value<<"\""<<endl;
+                              pointer->setValue(value);
+                              allowInsertion = false;
+                              break;
+                        }
+                        pointer++;
+                  } while (pointer != table[hashIndex].end());
+            } 
+            if(allowInsertion)
+            {
+                  HashNode temp(key, value);
+                  table[hashIndex].push_back(temp);
+            }
+      }
+
+      //delete function that removes the value based on it's hash
+      string deleteKey(int key)
+      {
+            string temp = "NULL";
+            int hashIndex = hashFunction(key);
+            if(!table[hashIndex].empty())
+            {
+                  auto pointer = table[hashIndex].begin();
+                  do
+                  {
+                        if(pointer->getKey()==key)
+                        {
+                              temp = pointer->getValue();
+                              table[hashIndex].erase(pointer);
+                              break;
+                        }
+                        pointer++;
+                  } while (pointer!=table[hashIndex].end());
+            }
+            return temp;
+      }
+
+      //print all the hashNodes
+      void printHashTable()
+      {
+            cout <<endl<< "=======Smart Hash Table======" << endl;
+            cout << "|        Key                   |              Value     |" << endl;
+            cout << "----------------------------------------------------" << endl;
+            for (int i=0; i < hashSize;i++)
+            {
+                  if (table[i].empty())
+                        continue;
+                  auto pointer = table[i].begin();
+                  while(pointer!=table[i].end())
+                  {
+                        pointer->print();
+                        pointer++;
+                  }
+            }
+            cout <<"============================" << endl<<endl;
+      }
+
+      // a contains function that returns whether the value is already in the hashTable
+      bool containsValue(string value)
+      {
+            for (int i=0; i < hashSize;i++)
+            {
+                  if(table[i].empty())
+                        continue;
+                  auto pointer = table[i].begin();
+                  do
+                  {
+                        if(pointer->getValue()==value)
+                        {
+                              return true;
+                        }
+                        pointer++;
+                  } while (pointer != table[i].end());
+            }
+            return false;
+      }
+       // a contains function that returns whether the key is already in the hashTable
+      bool containsKey(int key)
+      {
+            for (int i=0; i < hashSize;i++)
+            {
+                  if(table[i].empty())
+                        continue;
+                  auto pointer = table[i].begin();
+                  do
+                  {
+                        if(pointer->getKey()==key)
+                        {
+                              return true;
+                        }
+                        pointer++;
+                  } while (pointer != table[i].end());
+            }
+            return false;
+      }
+};
+
+
+int main()
+{
+      //implementation of simple hashtable"
+      cout << "===============================Simple Hash Table===============================" << endl;
+      HashTable HT;
+      HT.insert(910, "John");
+      HT.insert(911, "Mike");
+      HT.insert(912, "Hazel");
+      HT.insert(960, "Jerry");
+      HT.insert(979, "Ben");
+      HT.insert(910, "Shrek");
+      HT.insert(912, "Peter");
+
+      HT.printHashTable();
+
+      cout << "Deleted Value: " << HT.deleteKey(910)<<endl;
+      HT.printHashTable();
+
+      if(HT.containsKey(912))
+            cout << "Table contain key: 912" << endl;
+      else
+            cout << "Table does not contain key: 912" << endl;
+
+      if(HT.containsValue("Harry"))
+            cout << "Table contain value: Harry" << endl;
+      else
+            cout << "Table does not contain value: Harry" << endl;
+
+
+     //implementation of smart hashtable
+      cout << endl<<"===============================Smart Hash Table===============================" << endl<<endl;
+      SmartHashTable smartHT;
+      smartHT.insert(910, "John");
+      smartHT.insert(911, "Mike");
+      smartHT.insert(912, "Hazel");
+      smartHT.insert(960, "Jerry");
+      smartHT.insert(979, "Ben");
+      smartHT.insert(910, "Shrek");
+      smartHT.insert(912, "Peter");
+
+      smartHT.printHashTable();
+
+      cout << "Deleted Value: " << smartHT.deleteKey(910)<<endl;
+      smartHT.printHashTable();
+
+      if(smartHT.containsKey(912))
+            cout << "Table contain key: 912" << endl;
+      else
+            cout << "Table does not contain key: 912" << endl;
+
+      if(smartHT.containsValue("Harry"))
+            cout << "Table contain value: Harry" << endl;
+      else
+            cout << "Table does not contain value: Harry" << endl;
+
+      return 0;
+} 
